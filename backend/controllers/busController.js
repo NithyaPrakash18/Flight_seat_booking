@@ -88,6 +88,27 @@ exports.searchBuses = async (req, res, next) => {
   }
 };
 
+// @desc    Get featured buses for home page
+// @route   GET /api/buses
+// @access  Public
+exports.getFeaturedBuses = async (req, res, next) => {
+  try {
+    const limit = parseInt(req.query.limit) || 6;
+
+    const buses = await Bus.find({ isActive: true })
+      .sort({ rating: -1, createdAt: -1 })
+      .limit(limit);
+
+    res.status(200).json({
+      success: true,
+      count: buses.length,
+      data: buses,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Get bus details
 // @route   GET /api/buses/:id
 // @access  Public

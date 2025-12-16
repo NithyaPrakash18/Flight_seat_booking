@@ -18,6 +18,11 @@ const busSchema = new mongoose.Schema({
     enum: ["AC", "Non-AC", "Sleeper", "Semi-Sleeper", "Volvo", "Luxury"],
     required: [true, "Please specify bus type"],
   },
+  seatType: {
+    type: String,
+    enum: ["Seater", "Semi-Sleeper", "Sleeper"],
+    required: [true, "Please specify seat type"],
+  },
   totalSeats: {
     type: Number,
     required: [true, "Please specify total seats"],
@@ -42,6 +47,22 @@ const busSchema = new mongoose.Schema({
     type: String,
     required: [true, "Please provide operator name"],
   },
+  rating: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 5,
+  },
+  reviewCount: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  images: [
+    {
+      type: String,
+    },
+  ],
   isActive: {
     type: Boolean,
     default: true,

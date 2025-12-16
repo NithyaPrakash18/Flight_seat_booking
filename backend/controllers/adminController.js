@@ -4,6 +4,7 @@ const Booking = require("../models/Booking");
 const User = require("../models/User");
 const SeatLayout = require("../models/SeatLayout");
 const { AppError } = require("../middleware/errorHandler");
+const { getSeatLayoutTemplate } = require("../config/seatLayoutTemplates");
 
 // ==================== BUS MANAGEMENT ====================
 
@@ -12,11 +13,34 @@ const { AppError } = require("../middleware/errorHandler");
 // @access  Private/Admin
 exports.addBus = async (req, res, next) => {
   try {
-    const bus = await Bus.create(req.body);
+    const { seatType, ...busData } = req.body;
+
+    // Get seat layout template for the selected seat type
+    let layoutTemplate;
+    try {
+      layoutTemplate = getSeatLayoutTemplate(seatType);
+    } catch (error) {
+      return next(new AppError(error.message, 400));
+    }
+
+    // Auto-set totalSeats from template
+    busData.totalSeats = layoutTemplate.totalSeats;
+    busData.seatType = seatType;
+
+    // Create the bus
+    const bus = await Bus.create(busData);
+
+    // Auto-generate seat layout from template
+    await SeatLayout.create({
+      bus: bus._id,
+      layout: layoutTemplate.layout,
+      totalSeats: layoutTemplate.totalSeats,
+      seats: layoutTemplate.seats,
+    });
 
     res.status(201).json({
       success: true,
-      message: "Bus added successfully",
+      message: `Bus added successfully with ${seatType} seat layout (${layoutTemplate.totalSeats} seats)`,
       data: bus,
     });
   } catch (error) {

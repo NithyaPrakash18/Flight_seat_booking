@@ -72,6 +72,16 @@ const routeSchema = new mongoose.Schema({
       time: String,
     },
   ],
+  offers: {
+    type: String,
+    trim: true,
+  },
+  discount: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100,
+  },
   isActive: {
     type: Boolean,
     default: true,
