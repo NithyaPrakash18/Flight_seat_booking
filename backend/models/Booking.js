@@ -87,7 +87,6 @@ const bookingSchema = new mongoose.Schema({
   bookingId: {
     type: String,
     unique: true,
-    required: true,
   },
   createdAt: {
     type: Date,
