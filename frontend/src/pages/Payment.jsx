@@ -16,7 +16,18 @@ const Payment = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Discount State
+  const [discountApplied, setDiscountApplied] = useState(false);
+  const [discountAmount, setDiscountAmount] = useState(0);
+
   useEffect(() => {
+    // Check if user is authenticated
+    if (!user) {
+      alert("Please login to complete your booking.");
+      navigate("/login");
+      return;
+    }
+
     // Get booking data from localStorage
     const data = localStorage.getItem("bookingData");
     if (!data) {
@@ -38,20 +49,20 @@ const Payment = () => {
       }))
     );
 
-    // Fetch route details
-    fetchRouteDetails(parsedData.busId, parsedData.routeId);
+    // Fetch route details (endpoint changed to flight)
+    fetchRouteDetails(parsedData.flightId, parsedData.routeId);
   }, []);
 
-  const fetchRouteDetails = async (busId, routeId) => {
+  const fetchRouteDetails = async (flightId, routeId) => {
     try {
-      const response = await api.get(`/buses/${busId}`);
+      const response = await api.get(`/flights/${flightId}`);
       const route = response.data.data.routes.find((r) => r._id === routeId);
       setRouteDetails({
         ...route,
-        bus: response.data.data.bus,
+        flight: response.data.data.flight, // Renamed from bus to flight based on controller update
       });
     } catch (err) {
-      setError("Failed to load route details");
+      setError("Failed to load flight details");
     }
   };
 
@@ -59,6 +70,30 @@ const Payment = () => {
     const updated = [...passengers];
     updated[index][field] = value;
     setPassengers(updated);
+  };
+
+  const toggleDiscount = () => {
+    // Logic for "Celebrate Christmas" Deal: Get up to 2500 off.
+    // Let's implement flat 2500 off if total > 5000, else 10% or similar logic?
+    // User said "Get Upto 2500". I'll apply a flat 2500 for demonstration or min(2500, 20% of total).
+
+    if (discountApplied) {
+      setDiscountApplied(false);
+      setDiscountAmount(0);
+    } else {
+      const maxDiscount = 2500;
+      const calculatedDiscount = Math.min(maxDiscount, bookingData.totalAmount * 0.25); // 25% upto 2500
+
+      // Or just fixed 2500 as per banner text implying a big deal? "Get upto 2500" usually means variable.
+      // Let's settle on a nice round number for the demo, e.g., 2500 if total is high enough.
+
+      let finalDisc = 0;
+      if (bookingData.totalAmount > 5000) finalDisc = 2500;
+      else finalDisc = 500; // Small discount for cheap flights
+
+      setDiscountApplied(true);
+      setDiscountAmount(finalDisc);
+    }
   };
 
   const validateForm = () => {
@@ -91,8 +126,10 @@ const Payment = () => {
     setError("");
 
     try {
+      const finalTotal = bookingData.totalAmount - discountAmount;
+
       const bookingPayload = {
-        busId: bookingData.busId,
+        flightId: bookingData.flightId, // Updated param
         routeId: bookingData.routeId,
         journeyDate: bookingData.date,
         seats: passengers.map((p) => ({
@@ -101,7 +138,7 @@ const Payment = () => {
           passengerAge: parseInt(p.age),
           passengerGender: p.gender,
         })),
-        totalAmount: bookingData.totalAmount,
+        totalAmount: finalTotal, // Send discounted amount
         paymentMethod: paymentMethod,
         bookingStatus: "confirmed",
       };
@@ -109,15 +146,15 @@ const Payment = () => {
       const response = await api.post("/bookings", bookingPayload);
       const bookingId = response.data.data._id;
 
-      // Generate PDF ticket data
+      // Generate PDF ticket data (pass Flight details here)
       const ticketData = {
         bookingId: bookingId,
         passengers: passengers,
         route: routeDetails,
-        bus: routeDetails.bus,
+        flight: routeDetails.flight, // Updated
         journeyDate: bookingData.date,
         totalSeats: bookingData.selectedSeats.length,
-        totalAmount: bookingData.totalAmount,
+        totalAmount: finalTotal,
       };
 
       // Generate and download PDF ticket
@@ -131,10 +168,18 @@ const Payment = () => {
       );
       navigate("/my-bookings");
     } catch (err) {
-      setError(
-        err.response?.data?.error ||
+      console.error(err);
+      if (err.response?.status === 401) {
+        alert("Your session has expired. Please login again.");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+      } else {
+        setError(
+          err.response?.data?.error ||
           "Failed to create booking. Please try again."
-      );
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -143,6 +188,8 @@ const Payment = () => {
   if (!bookingData || !routeDetails) {
     return <div className="loader">Loading booking details...</div>;
   }
+
+  const finalAmount = bookingData.totalAmount - discountAmount;
 
   return (
     <div className="payment-page">
@@ -157,8 +204,8 @@ const Payment = () => {
             <h2>Booking Summary</h2>
             <div className="summary-details">
               <div className="summary-row">
-                <span>Bus:</span>
-                <strong>{routeDetails.bus.name}</strong>
+                <span>Flight:</span>
+                <strong>{routeDetails.flight?.name} ({routeDetails.flight?.airline})</strong>
               </div>
               <div className="summary-row">
                 <span>Route:</span>
@@ -185,9 +232,33 @@ const Payment = () => {
                 <span>Selected Seats:</span>
                 <strong>{bookingData.selectedSeats.join(", ")}</strong>
               </div>
+              <div className="summary-row">
+                <span>Base Fare:</span>
+                <strong>₹{bookingData.totalAmount}</strong>
+              </div>
+
+              {/* Promo Section */}
+              <div
+                className={`promo-box ${discountApplied ? 'applied' : ''}`}
+                onClick={toggleDiscount}
+              >
+                <div className="promo-title">
+                  <span>🎄 Use Code: XMAS2025</span>
+                  <span className="apply-text">{discountApplied ? "REMOVE" : "APPLY"}</span>
+                </div>
+                <div className="promo-desc">
+                  Celebrate Christmas & New Year! Get upto ₹2,500* off.
+                </div>
+                {discountApplied && (
+                  <div style={{ color: '#27ae60', fontSize: '12px', marginTop: '5px' }}>
+                    <strong>Success!</strong> ₹{discountAmount} discount applied.
+                  </div>
+                )}
+              </div>
+
               <div className="summary-row total">
                 <span>Total Amount:</span>
-                <strong>₹{bookingData.totalAmount}</strong>
+                <strong>₹{finalAmount}</strong>
               </div>
             </div>
           </div>
@@ -318,7 +389,7 @@ const Payment = () => {
                 className="btn btn-primary btn-large btn-block"
                 disabled={loading}
               >
-                {loading ? "Processing..." : `Pay ₹${bookingData.totalAmount}`}
+                {loading ? "Processing..." : `Pay ₹${finalAmount}`}
               </button>
             </form>
           </div>

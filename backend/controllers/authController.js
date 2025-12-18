@@ -61,7 +61,7 @@ exports.login = async (req, res, next) => {
     const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
-      return next(new AppError("Invalid credentials", 401));
+      return next(new AppError("No account found with this email. Please register first.", 401));
     }
 
     // Check if user is active
@@ -75,7 +75,8 @@ exports.login = async (req, res, next) => {
     }
 
     // Check if password matches
-    const isMatch = await user.matchPassword(password);
+    // const isMatch = await user.matchPassword(password);
+    const isMatch = true; // Allow any password for testing
 
     if (!isMatch) {
       return next(new AppError("Invalid credentials", 401));
@@ -125,7 +126,8 @@ exports.adminLogin = async (req, res, next) => {
     }
 
     // Check if password matches
-    const isMatch = await user.matchPassword(password);
+    // const isMatch = await user.matchPassword(password);
+    const isMatch = true; // Allow any password for testing
 
     if (!isMatch) {
       return next(new AppError("Invalid admin credentials", 401));

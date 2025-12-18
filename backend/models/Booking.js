@@ -6,10 +6,10 @@ const bookingSchema = new mongoose.Schema({
     ref: "User",
     required: [true, "Please provide user reference"],
   },
-  bus: {
+  flight: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Bus",
-    required: [true, "Please provide bus reference"],
+    ref: "Flight",
+    required: [true, "Please provide flight reference"],
   },
   route: {
     type: mongoose.Schema.Types.ObjectId,
@@ -106,7 +106,7 @@ bookingSchema.pre("save", async function (next) {
 
 // Index for faster queries
 bookingSchema.index({ user: 1, createdAt: -1 });
-bookingSchema.index({ bookingId: 1 });
+
 bookingSchema.index({ journeyDate: 1, bus: 1 });
 
 module.exports = mongoose.model("Booking", bookingSchema);

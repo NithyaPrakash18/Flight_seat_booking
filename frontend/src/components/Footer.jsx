@@ -5,8 +5,8 @@ const Footer = () => {
     <footer className="footer">
       <div className="footer-container">
         <div className="footer-section">
-          <h3>Travel Booking</h3>
-          <p>Your trusted partner for bus ticket bookings</p>
+          <h3>SkyWays</h3>
+          <p>Your trusted partner for flight ticket bookings</p>
         </div>
 
         <div className="footer-section">
@@ -16,7 +16,7 @@ const Footer = () => {
               <a href="/">Home</a>
             </li>
             <li>
-              <a href="/search">Search Buses</a>
+              <a href="/search">Search Flights</a>
             </li>
             <li>
               <a href="/about">About Us</a>
@@ -50,7 +50,7 @@ const Footer = () => {
       </div>
 
       <div className="footer-bottom">
-        <p>&copy; 2025 Travel Booking. All rights reserved.</p>
+        <p>&copy; 2025 SkyWays. All rights reserved.</p>
       </div>
     </footer>
   );

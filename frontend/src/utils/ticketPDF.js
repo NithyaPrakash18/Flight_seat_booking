@@ -29,11 +29,11 @@ export const generateTicketPDF = (bookingData) => {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(28);
     doc.setFont(undefined, "bold");
-    doc.text("BUS TICKET", pageWidth / 2, 20, { align: "center" });
+    doc.text("FLIGHT TICKET", pageWidth / 2, 20, { align: "center" });
 
     doc.setFontSize(11);
     doc.setFont(undefined, "normal");
-    doc.text("Travel Booking System", pageWidth / 2, 28, { align: "center" });
+    doc.text("Limitless Journeys", pageWidth / 2, 28, { align: "center" });
 
     // Booking ID Badge
     doc.setFillColor(255, 255, 255);
@@ -85,7 +85,7 @@ export const generateTicketPDF = (bookingData) => {
     doc.setFontSize(9);
     doc.setTextColor(...textDark);
     doc.text(
-      `${bookingData.bus.name} | ${bookingData.bus.busNumber}`,
+      `${bookingData.flight.name} | ${bookingData.flight.flightNumber}`,
       pageWidth / 2,
       yPos,
       {

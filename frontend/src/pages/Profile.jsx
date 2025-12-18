@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import api from "../config/api";
 import "../styles/Profile.css";
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
   const [bookingStats, setBookingStats] = useState({
     total: 0,
@@ -197,6 +199,16 @@ const Profile = () => {
           >
             <span className="tab-icon">🔒</span>
             Security
+          </button>
+          <button
+            className="tab-button logout-button"
+            onClick={() => {
+              logout();
+              navigate("/login");
+            }}
+          >
+            <span className="tab-icon">🚪</span>
+            Logout
           </button>
         </div>
 

@@ -5,7 +5,7 @@ import api from "../config/api";
 import "../styles/SeatSelection.css";
 
 const SeatSelection = () => {
-  const { busId, routeId } = useParams();
+  const { flightId, routeId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
@@ -25,7 +25,7 @@ const SeatSelection = () => {
   const fetchSeatLayout = async () => {
     try {
       const response = await api.get(
-        `/buses/${busId}/seats?routeId=${routeId}&date=${date}`
+        `/flights/${flightId}/seats?routeId=${routeId}&date=${date}`
       );
       setSeatLayout(response.data.data);
     } catch (err) {
@@ -37,7 +37,7 @@ const SeatSelection = () => {
 
   const fetchRouteDetails = async () => {
     try {
-      const response = await api.get(`/buses/${busId}`);
+      const response = await api.get(`/flights/${flightId}`);
       const routeData = response.data.data.routes.find(
         (r) => r._id === routeId
       );
@@ -55,10 +55,10 @@ const SeatSelection = () => {
         selectedSeats.filter((s) => s.seatNumber !== seat.seatNumber)
       );
     } else {
-      if (selectedSeats.length < 6) {
+      if (selectedSeats.length < 9) { // Allow more seats for groups
         setSelectedSeats([...selectedSeats, seat]);
       } else {
-        alert("You can select maximum 6 seats");
+        alert("You can select maximum 9 seats");
       }
     }
   };
@@ -77,7 +77,7 @@ const SeatSelection = () => {
 
     // Store booking data in localStorage and navigate to booking form
     const bookingData = {
-      busId,
+      flightId,
       routeId,
       date,
       selectedSeats: selectedSeats.map((s) => s.seatNumber),
@@ -117,84 +117,70 @@ const SeatSelection = () => {
       </div>
 
       <div className="seat-layout-container">
-        <div className="driver-section">
-          <svg
-            className="steering-wheel"
-            viewBox="0 0 100 100"
-            width="40"
-            height="40"
-          >
-            <circle
-              cx="50"
-              cy="50"
-              r="45"
-              fill="none"
-              stroke="#6b7280"
-              strokeWidth="8"
-            />
-            <circle cx="50" cy="50" r="20" fill="#6b7280" />
-            <path
-              d="M50 30 L50 15 M50 70 L50 85 M30 50 L15 50 M70 50 L85 50"
-              stroke="#6b7280"
-              strokeWidth="6"
-              strokeLinecap="round"
-            />
-          </svg>
+        {/* Aircraft Nose / Cockpit visual */}
+        <div className="cockpit-section" style={{ textAlign: "center", marginBottom: "20px" }}>
+          <div style={{
+            width: 0,
+            height: 0,
+            borderLeft: "50px solid transparent",
+            borderRight: "50px solid transparent",
+            borderBottom: "60px solid #e2e8f0",
+            margin: "0 auto",
+            borderRadius: "50% 50% 0 0 / 100% 100% 0 0"
+          }}></div>
         </div>
-        <div className="seats-grid">
+
+        <div className="seats-grid" style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${seatLayout?.layout === '3x3' ? 7 : (seatLayout?.layout === '2x2' ? 5 : 4)}, 1fr)`,
+          gap: '10px',
+          justifyContent: 'center',
+          maxWidth: '500px',
+          margin: '0 auto'  // Center the grid
+        }}>
           {seatLayout?.seats.map((seat, index) => {
             const isSelected = selectedSeats.find(
               (s) => s.seatNumber === seat.seatNumber
             );
-            const isAisle = index % 4 === 1; // Add space after 2nd seat in each row
-            const isSleeper = seat.type === "sleeper";
+
+            // Logic for Aisle: depends on layout. 
+            // Simple generic check: if column is "aisleAfter" column? 
+            // The backend layout template had "aisleAfter". But here we receive flattened seats array.
+            // We can approximate aisle by column number if we knew the layout string.
+            // For 3x3 (ABC DEF), aisle is after col 3.
+            // For 2x2 (AC DF), aisle is after col 2.
+
+            let isAisle = false;
+            if (seatLayout?.layout === '3x3' && seat.column === 3) isAisle = true;
+            if (seatLayout?.layout === '2x2' && seat.column === 2) isAisle = true;
+
+            const isBusiness = seat.type === "business" || seat.type === "first";
 
             return (
               <React.Fragment key={seat.seatNumber}>
                 <div
-                  className={`seat ${seat.isBooked ? "booked" : ""} ${
-                    isSelected ? "selected" : ""
-                  } ${isSleeper ? "sleeper-bed" : ""}`}
+                  className={`seat ${seat.isBooked ? "booked" : ""} ${isSelected ? "selected" : ""
+                    } ${isBusiness ? "business-class" : ""}`}
                   onClick={() => handleSeatClick(seat)}
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    backgroundColor: isSelected ? '#10b981' : (seat.isBooked ? '#cbd5e1' : '#fff'),
+                    border: isSelected ? 'none' : '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: seat.isBooked ? 'not-allowed' : 'pointer',
+                    fontSize: '0.8rem',
+                    fontWeight: 'bold',
+                    color: isSelected ? 'white' : '#1e293b'
+                  }}
                 >
-                  {isSleeper ? (
-                    // Bed icon for sleeper seats
-                    <svg
-                      className="seat-icon bed-icon"
-                      viewBox="0 0 24 24"
-                      width="24"
-                      height="24"
-                    >
-                      <path
-                        d="M21 10.78V8c0-1.65-1.35-3-3-3h-4c-.77 0-1.47.3-2 .78-.53-.48-1.23-.78-2-.78H6C4.35 5 3 6.35 3 8v2.78c-.61.55-1 1.34-1 2.22v6h2v-2h16v2h2v-6c0-.88-.39-1.67-1-2.22zM14 7h4c.55 0 1 .45 1 1v2h-6V8c0-.55.45-1 1-1zM5 8c0-.55.45-1 1-1h4c.55 0 1 .45 1 1v2H5V8zm-1 7v-2c0-.55.45-1 1-1h14c.55 0 1 .45 1 1v2H4z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                  ) : (
-                    // Chair icon for regular seats
-                    <svg
-                      className="seat-icon"
-                      viewBox="0 0 24 24"
-                      width="24"
-                      height="24"
-                    >
-                      <path
-                        d="M4 18v3h3v-3h10v3h3v-6H4v3zm15-8h3v3h-3v-3zM2 10h3v3H2v-3zm15 3H7V5c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2v8z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                  )}
-                  <div className="seat-info">
-                    {seat.isBooked ? (
-                      <span className="seat-status">Sold</span>
-                    ) : isSelected ? (
-                      <span className="seat-price">₹{route?.price || 0}</span>
-                    ) : (
-                      <span className="seat-price">₹{route?.price || 0}</span>
-                    )}
-                  </div>
+                  {seat.seatNumber}
                 </div>
-                {isAisle && <div className="aisle"></div>}
+                {/* Spacer for Aisle in Grid */}
+                {isAisle && <div className="aisle-spacer" style={{ width: '20px' }}></div>}
               </React.Fragment>
             );
           })}

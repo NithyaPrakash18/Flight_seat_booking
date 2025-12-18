@@ -1,5 +1,5 @@
 const Booking = require("../models/Booking");
-const Bus = require("../models/Bus");
+const Flight = require("../models/Flight");
 const Route = require("../models/Route");
 const SeatLayout = require("../models/SeatLayout");
 const { AppError } = require("../middleware/errorHandler");
@@ -9,27 +9,27 @@ const { AppError } = require("../middleware/errorHandler");
 // @access  Private
 exports.createBooking = async (req, res, next) => {
   try {
-    const { busId, routeId, journeyDate, seats, boardingPoint, droppingPoint } =
+    const { flightId, routeId, journeyDate, seats, boardingPoint, droppingPoint } =
       req.body;
 
     // Validate required fields
-    if (!busId || !routeId || !journeyDate || !seats || seats.length === 0) {
+    if (!flightId || !routeId || !journeyDate || !seats || seats.length === 0) {
       return next(
         new AppError("Please provide all required booking details", 400)
       );
     }
 
-    // Verify bus and route exist
-    const bus = await Bus.findById(busId);
+    // Verify flight and route exist
+    const flight = await Flight.findById(flightId);
     const route = await Route.findById(routeId);
 
-    if (!bus || !route) {
-      return next(new AppError("Bus or route not found", 404));
+    if (!flight || !route) {
+      return next(new AppError("Flight or route not found", 404));
     }
 
     // Check if seats are already booked
     const existingBookings = await Booking.find({
-      bus: busId,
+      flight: flightId,
       route: routeId,
       journeyDate: {
         $gte: new Date(journeyDate).setHours(0, 0, 0, 0),
@@ -58,7 +58,7 @@ exports.createBooking = async (req, res, next) => {
     }
 
     // Validate seat layout
-    const seatLayout = await SeatLayout.findOne({ bus: busId });
+    const seatLayout = await SeatLayout.findOne({ flight: flightId });
     if (seatLayout) {
       const validSeats = seatLayout.seats.map((s) => s.seatNumber);
       const invalidSeats = requestedSeatNumbers.filter(
@@ -78,7 +78,7 @@ exports.createBooking = async (req, res, next) => {
     // Create booking
     const booking = await Booking.create({
       user: req.user.id,
-      bus: busId,
+      flight: flightId,
       route: routeId,
       journeyDate,
       seats,
@@ -92,7 +92,7 @@ exports.createBooking = async (req, res, next) => {
     // Populate booking details
     await booking.populate([
       { path: "user", select: "name email phone" },
-      { path: "bus" },
+      { path: "flight" },
       { path: "route" },
     ]);
 
@@ -119,7 +119,7 @@ exports.getUserBookings = async (req, res, next) => {
     }
 
     const bookings = await Booking.find({ user: userId })
-      .populate("bus")
+      .populate("flight")
       .populate("route")
       .sort({ createdAt: -1 });
 
@@ -140,7 +140,7 @@ exports.getBooking = async (req, res, next) => {
   try {
     const booking = await Booking.findById(req.params.id)
       .populate("user", "name email phone")
-      .populate("bus")
+      .populate("flight")
       .populate("route");
 
     if (!booking) {

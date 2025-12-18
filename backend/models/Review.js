@@ -6,10 +6,10 @@ const reviewSchema = new mongoose.Schema({
     ref: "User",
     required: [true, "Please provide user reference"],
   },
-  bus: {
+  flight: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Bus",
-    required: [true, "Please provide bus reference"],
+    ref: "Flight",
+    required: [true, "Please provide flight reference"],
   },
   booking: {
     type: mongoose.Schema.Types.ObjectId,

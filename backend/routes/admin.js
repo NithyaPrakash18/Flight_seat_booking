@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const {
-  addBus,
-  updateBus,
-  deleteBus,
-  getAllBuses,
+  addFlight,
+  updateFlight,
+  deleteFlight,
+  getAllFlights,
   addRoute,
   updateRoute,
   deleteRoute,
@@ -22,10 +22,10 @@ const { protect, adminOnly } = require("../middleware/auth");
 router.use(protect);
 router.use(adminOnly);
 
-// Bus routes
-router.route("/buses").get(getAllBuses).post(addBus);
+// Flight routes
+router.route("/flights").get(getAllFlights).post(addFlight);
 
-router.route("/buses/:id").put(updateBus).delete(deleteBus);
+router.route("/flights/:id").put(updateFlight).delete(deleteFlight);
 
 // Route routes
 router.route("/routes").get(getAllRoutes).post(addRoute);
@@ -34,7 +34,7 @@ router.route("/routes/:id").put(updateRoute).delete(deleteRoute);
 
 // Seat layout routes
 router.post("/seat-layouts", createSeatLayout);
-router.put("/seat-layouts/:busId", updateSeatLayout);
+router.put("/seat-layouts/:flightId", updateSeatLayout);
 
 // Booking routes
 router.get("/bookings", getAllBookings);

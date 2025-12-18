@@ -1,10 +1,10 @@
 const mongoose = require("mongoose");
 
 const routeSchema = new mongoose.Schema({
-  bus: {
+  flight: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Bus",
-    required: [true, "Please provide bus reference"],
+    ref: "Flight",
+    required: [true, "Please provide flight reference"],
   },
   source: {
     type: String,

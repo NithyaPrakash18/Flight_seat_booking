@@ -2,50 +2,50 @@ import { useState, useEffect } from "react";
 import api from "../../config/api";
 import "../../styles/AdminPages.css";
 
-const ManageBuses = () => {
-  const [buses, setBuses] = useState([]);
+const ManageFlights = () => {
+  const [flights, setFlights] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    busNumber: "",
-    busType: "AC",
-    seatType: "Seater",
-    operator: "",
+    flightNumber: "",
+    aircraftType: "Airbus A320",
+    class: "Economy",
+    airline: "",
     amenities: [],
   });
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
-    fetchBuses();
+    fetchFlights();
   }, []);
 
-  const fetchBuses = async () => {
+  const fetchFlights = async () => {
     try {
-      const response = await api.get("/admin/buses");
-      setBuses(response.data.data);
+      const response = await api.get("/admin/flights");
+      setFlights(response.data.data);
     } catch (err) {
-      alert("Failed to load buses");
+      alert("Failed to load flights");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submitting bus data:", formData);
+    console.log("Submitting flight data:", formData);
 
     try {
       let response;
       if (editingId) {
-        response = await api.put(`/admin/buses/${editingId}`, formData);
-        alert("Bus updated successfully");
+        response = await api.put(`/admin/flights/${editingId}`, formData);
+        alert("Flight updated successfully");
       } else {
-        response = await api.post("/admin/buses", formData);
-        alert("Bus added successfully");
+        response = await api.post("/admin/flights", formData);
+        alert("Flight added successfully");
       }
       console.log("Success response:", response.data);
       resetForm();
-      fetchBuses();
+      fetchFlights();
     } catch (err) {
-      console.error("Error adding bus:", err);
+      console.error("Error adding flight:", err);
       console.error("Error response:", err.response);
       const errorMessage =
         err.response?.data?.error || err.message || "Operation failed";
@@ -53,25 +53,25 @@ const ManageBuses = () => {
     }
   };
 
-  const handleEdit = (bus) => {
+  const handleEdit = (flight) => {
     setFormData({
-      name: bus.name,
-      busNumber: bus.busNumber,
-      busType: bus.busType,
-      seatType: bus.seatType,
-      operator: bus.operator,
-      amenities: bus.amenities || [],
+      name: flight.name,
+      flightNumber: flight.flightNumber,
+      aircraftType: flight.aircraftType,
+      class: flight.class,
+      airline: flight.airline,
+      amenities: flight.amenities || [],
     });
-    setEditingId(bus._id);
+    setEditingId(flight._id);
     setShowForm(true);
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this bus?")) return;
+    if (!window.confirm("Delete this flight?")) return;
     try {
-      await api.delete(`/admin/buses/${id}`);
-      alert("Bus deleted");
-      fetchBuses();
+      await api.delete(`/admin/flights/${id}`);
+      alert("Flight deleted");
+      fetchFlights();
     } catch (err) {
       alert(err.response?.data?.error || "Failed to delete");
     }
@@ -80,10 +80,10 @@ const ManageBuses = () => {
   const resetForm = () => {
     setFormData({
       name: "",
-      busNumber: "",
-      busType: "AC",
-      seatType: "Seater",
-      operator: "",
+      flightNumber: "",
+      aircraftType: "Airbus A320",
+      class: "Economy",
+      airline: "",
       amenities: [],
     });
     setEditingId(null);
@@ -93,12 +93,12 @@ const ManageBuses = () => {
   return (
     <div className="admin-page">
       <div className="page-header">
-        <h2>Manage Buses</h2>
+        <h2>Manage Flights</h2>
         <button
           className="btn btn-primary"
           onClick={() => setShowForm(!showForm)}
         >
-          {showForm ? "Cancel" : "+ Add Bus"}
+          {showForm ? "Cancel" : "+ Add Flight"}
         </button>
       </div>
 
@@ -106,64 +106,64 @@ const ManageBuses = () => {
         <form onSubmit={handleSubmit} className="admin-form">
           <input
             type="text"
-            placeholder="Bus Name"
+            placeholder="Flight Name (e.g. Morning Express)"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
           />
           <input
             type="text"
-            placeholder="Bus Number"
-            value={formData.busNumber}
+            placeholder="Flight Number"
+            value={formData.flightNumber}
             onChange={(e) =>
               setFormData({
                 ...formData,
-                busNumber: e.target.value.toUpperCase(),
+                flightNumber: e.target.value.toUpperCase(),
               })
             }
             required
           />
           <select
-            value={formData.busType}
+            value={formData.aircraftType}
             onChange={(e) =>
-              setFormData({ ...formData, busType: e.target.value })
+              setFormData({ ...formData, aircraftType: e.target.value })
             }
           >
-            <option value="AC">AC</option>
-            <option value="Non-AC">Non-AC</option>
-            <option value="Sleeper">Sleeper</option>
-            <option value="Semi-Sleeper">Semi-Sleeper</option>
-            <option value="Volvo">Volvo</option>
-            <option value="Luxury">Luxury</option>
+            <option value="Airbus A320">Airbus A320</option>
+            <option value="Boeing 737">Boeing 737</option>
+            <option value="Boeing 747">Boeing 747</option>
+            <option value="Airbus A380">Airbus A380</option>
+            <option value="Embraer E190">Embraer E190</option>
           </select>
           <select
-            value={formData.seatType}
+            value={formData.class}
             onChange={(e) =>
-              setFormData({ ...formData, seatType: e.target.value })
+              setFormData({ ...formData, class: e.target.value })
             }
             required
           >
-            <option value="Seater">Seater (40 seats)</option>
-            <option value="Semi-Sleeper">Semi-Sleeper (35 seats)</option>
-            <option value="Sleeper">Sleeper (30 berths)</option>
+            <option value="Economy">Economy</option>
+            <option value="Premium Economy">Premium Economy</option>
+            <option value="Business">Business</option>
+            <option value="First Class">First Class</option>
           </select>
           <div className="info-message">
             <p>
               <strong>ℹ️ Note:</strong> Seat layout will be automatically
-              generated based on the selected seat type.
+              generated based on the selected class (Economy, Premium Economy, Business, First).
             </p>
           </div>
           <input
             type="text"
-            placeholder="Operator Name"
-            value={formData.operator}
+            placeholder="Airline Name"
+            value={formData.airline}
             onChange={(e) =>
-              setFormData({ ...formData, operator: e.target.value })
+              setFormData({ ...formData, airline: e.target.value })
             }
             required
           />
           <button type="submit" className="btn btn-success">
-            {editingId ? "Update Bus" : "Add Bus"}
+            {editingId ? "Update Flight" : "Add Flight"}
           </button>
         </form>
       )}
@@ -172,32 +172,34 @@ const ManageBuses = () => {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>Bus Number</th>
+              <th>Flight No</th>
               <th>Name</th>
-              <th>Type</th>
+              <th>Aircraft</th>
+              <th>Class</th>
               <th>Seats</th>
-              <th>Operator</th>
+              <th>Airline</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {buses.map((bus) => (
-              <tr key={bus._id}>
-                <td>{bus.busNumber}</td>
-                <td>{bus.name}</td>
-                <td>{bus.busType}</td>
-                <td>{bus.totalSeats}</td>
-                <td>{bus.operator}</td>
+            {flights.map((flight) => (
+              <tr key={flight._id}>
+                <td>{flight.flightNumber}</td>
+                <td>{flight.name}</td>
+                <td>{flight.aircraftType}</td>
+                <td>{flight.class}</td>
+                <td>{flight.totalSeats}</td>
+                <td>{flight.airline}</td>
                 <td>
                   <button
                     className="btn btn-sm btn-info"
-                    onClick={() => handleEdit(bus)}
+                    onClick={() => handleEdit(flight)}
                   >
                     Edit
                   </button>
                   <button
                     className="btn btn-sm btn-danger"
-                    onClick={() => handleDelete(bus._id)}
+                    onClick={() => handleDelete(flight._id)}
                   >
                     Delete
                   </button>
@@ -211,4 +213,4 @@ const ManageBuses = () => {
   );
 };
 
-export default ManageBuses;
+export default ManageFlights;

@@ -1,4 +1,4 @@
-const Bus = require("../models/Bus");
+const Flight = require("../models/Flight");
 const Route = require("../models/Route");
 const Booking = require("../models/Booking");
 const User = require("../models/User");
@@ -6,33 +6,33 @@ const SeatLayout = require("../models/SeatLayout");
 const { AppError } = require("../middleware/errorHandler");
 const { getSeatLayoutTemplate } = require("../config/seatLayoutTemplates");
 
-// ==================== BUS MANAGEMENT ====================
+// ==================== FLIGHT MANAGEMENT ====================
 
-// @desc    Add new bus
-// @route   POST /api/admin/buses
+// @desc    Add new flight
+// @route   POST /api/admin/flights
 // @access  Private/Admin
-exports.addBus = async (req, res, next) => {
+exports.addFlight = async (req, res, next) => {
   try {
-    const { seatType, ...busData } = req.body;
+    const { class: flightClass, ...flightData } = req.body;
 
-    // Get seat layout template for the selected seat type
+    // Get seat layout template for the selected class
     let layoutTemplate;
     try {
-      layoutTemplate = getSeatLayoutTemplate(seatType);
+      layoutTemplate = getSeatLayoutTemplate(flightClass);
     } catch (error) {
       return next(new AppError(error.message, 400));
     }
 
     // Auto-set totalSeats from template
-    busData.totalSeats = layoutTemplate.totalSeats;
-    busData.seatType = seatType;
+    flightData.totalSeats = layoutTemplate.totalSeats;
+    flightData.class = flightClass;
 
-    // Create the bus
-    const bus = await Bus.create(busData);
+    // Create the flight
+    const flight = await Flight.create(flightData);
 
     // Auto-generate seat layout from template
     await SeatLayout.create({
-      bus: bus._id,
+      flight: flight._id,
       layout: layoutTemplate.layout,
       totalSeats: layoutTemplate.totalSeats,
       seats: layoutTemplate.seats,
@@ -40,82 +40,82 @@ exports.addBus = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      message: `Bus added successfully with ${seatType} seat layout (${layoutTemplate.totalSeats} seats)`,
-      data: bus,
+      message: `Flight added successfully with ${flightClass} seat layout (${layoutTemplate.totalSeats} seats)`,
+      data: flight,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Update bus
-// @route   PUT /api/admin/buses/:id
+// @desc    Update flight
+// @route   PUT /api/admin/flights/:id
 // @access  Private/Admin
-exports.updateBus = async (req, res, next) => {
+exports.updateFlight = async (req, res, next) => {
   try {
-    const bus = await Bus.findByIdAndUpdate(req.params.id, req.body, {
+    const flight = await Flight.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
 
-    if (!bus) {
-      return next(new AppError("Bus not found", 404));
+    if (!flight) {
+      return next(new AppError("Flight not found", 404));
     }
 
     res.status(200).json({
       success: true,
-      message: "Bus updated successfully",
-      data: bus,
+      message: "Flight updated successfully",
+      data: flight,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Delete bus
-// @route   DELETE /api/admin/buses/:id
+// @desc    Delete flight
+// @route   DELETE /api/admin/flights/:id
 // @access  Private/Admin
-exports.deleteBus = async (req, res, next) => {
+exports.deleteFlight = async (req, res, next) => {
   try {
-    const bus = await Bus.findById(req.params.id);
+    const flight = await Flight.findById(req.params.id);
 
-    if (!bus) {
-      return next(new AppError("Bus not found", 404));
+    if (!flight) {
+      return next(new AppError("Flight not found", 404));
     }
 
-    // Check if bus has active bookings
+    // Check if flight has active bookings
     const activeBookings = await Booking.find({
-      bus: req.params.id,
+      flight: req.params.id,
       journeyDate: { $gte: new Date() },
       bookingStatus: "confirmed",
     });
 
     if (activeBookings.length > 0) {
-      return next(new AppError("Cannot delete bus with active bookings", 400));
+      return next(new AppError("Cannot delete flight with active bookings", 400));
     }
 
-    await bus.deleteOne();
+    await flight.deleteOne();
 
     res.status(200).json({
       success: true,
-      message: "Bus deleted successfully",
+      message: "Flight deleted successfully",
     });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Get all buses
-// @route   GET /api/admin/buses
+// @desc    Get all flights
+// @route   GET /api/admin/flights
 // @access  Private/Admin
-exports.getAllBuses = async (req, res, next) => {
+exports.getAllFlights = async (req, res, next) => {
   try {
-    const buses = await Bus.find().sort({ createdAt: -1 });
+    const flights = await Flight.find().sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
-      count: buses.length,
-      data: buses,
+      count: flights.length,
+      data: flights,
     });
   } catch (error) {
     next(error);
@@ -129,14 +129,15 @@ exports.getAllBuses = async (req, res, next) => {
 // @access  Private/Admin
 exports.addRoute = async (req, res, next) => {
   try {
-    // Verify bus exists
-    const bus = await Bus.findById(req.body.bus);
-    if (!bus) {
-      return next(new AppError("Bus not found", 404));
+    // Verify flight exists
+    // req.body should have 'flight' ID
+    const flight = await Flight.findById(req.body.flight);
+    if (!flight) {
+      return next(new AppError("Flight not found", 404));
     }
 
     const route = await Route.create(req.body);
-    await route.populate("bus");
+    await route.populate("flight");
 
     res.status(201).json({
       success: true,
@@ -156,7 +157,7 @@ exports.updateRoute = async (req, res, next) => {
     const route = await Route.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
-    }).populate("bus");
+    }).populate("flight");
 
     if (!route) {
       return next(new AppError("Route not found", 404));
@@ -212,7 +213,7 @@ exports.deleteRoute = async (req, res, next) => {
 // @access  Private/Admin
 exports.getAllRoutes = async (req, res, next) => {
   try {
-    const routes = await Route.find().populate("bus").sort({ createdAt: -1 });
+    const routes = await Route.find().populate("flight").sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -226,29 +227,29 @@ exports.getAllRoutes = async (req, res, next) => {
 
 // ==================== SEAT LAYOUT MANAGEMENT ====================
 
-// @desc    Create seat layout for bus
+// @desc    Create seat layout for flight
 // @route   POST /api/admin/seat-layouts
 // @access  Private/Admin
 exports.createSeatLayout = async (req, res, next) => {
   try {
-    const { busId, layout, seats } = req.body;
+    const { flightId, layout, seats } = req.body;
 
-    // Verify bus exists
-    const bus = await Bus.findById(busId);
-    if (!bus) {
-      return next(new AppError("Bus not found", 404));
+    // Verify flight exists
+    const flight = await Flight.findById(flightId);
+    if (!flight) {
+      return next(new AppError("Flight not found", 404));
     }
 
     // Check if layout already exists
-    const existingLayout = await SeatLayout.findOne({ bus: busId });
+    const existingLayout = await SeatLayout.findOne({ flight: flightId });
     if (existingLayout) {
-      return next(new AppError("Seat layout already exists for this bus", 400));
+      return next(new AppError("Seat layout already exists for this flight", 400));
     }
 
     const seatLayout = await SeatLayout.create({
-      bus: busId,
+      flight: flightId,
       layout,
-      totalSeats: bus.totalSeats,
+      totalSeats: flight.totalSeats,
       seats,
     });
 
@@ -263,12 +264,12 @@ exports.createSeatLayout = async (req, res, next) => {
 };
 
 // @desc    Update seat layout
-// @route   PUT /api/admin/seat-layouts/:busId
+// @route   PUT /api/admin/seat-layouts/:flightId
 // @access  Private/Admin
 exports.updateSeatLayout = async (req, res, next) => {
   try {
     const seatLayout = await SeatLayout.findOneAndUpdate(
-      { bus: req.params.busId },
+      { flight: req.params.flightId },
       req.body,
       { new: true, runValidators: true }
     );
@@ -294,7 +295,7 @@ exports.updateSeatLayout = async (req, res, next) => {
 // @access  Private/Admin
 exports.getAllBookings = async (req, res, next) => {
   try {
-    const { status, date, busId } = req.query;
+    const { status, date, flightId } = req.query;
 
     // Build query
     let query = {};
@@ -310,13 +311,13 @@ exports.getAllBookings = async (req, res, next) => {
       };
     }
 
-    if (busId) {
-      query.bus = busId;
+    if (flightId) {
+      query.flight = flightId;
     }
 
     const bookings = await Booking.find(query)
       .populate("user", "name email phone")
-      .populate("bus")
+      .populate("flight")
       .populate("route")
       .sort({ createdAt: -1 });
 
@@ -347,7 +348,7 @@ exports.getStats = async (req, res, next) => {
       { $group: { _id: null, total: { $sum: "$totalAmount" } } },
     ]);
 
-    const totalBuses = await Bus.countDocuments();
+    const totalFlights = await Flight.countDocuments();
     const totalRoutes = await Route.countDocuments();
     const totalUsers = await User.countDocuments({ role: "user" });
 
@@ -360,7 +361,7 @@ exports.getStats = async (req, res, next) => {
           cancelled: cancelledBookings,
         },
         revenue: totalRevenue[0]?.total || 0,
-        buses: totalBuses,
+        flights: totalFlights,
         routes: totalRoutes,
         users: totalUsers,
       },

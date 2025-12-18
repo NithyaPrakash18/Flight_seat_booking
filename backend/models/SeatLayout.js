@@ -1,17 +1,17 @@
 const mongoose = require("mongoose");
 
 const seatLayoutSchema = new mongoose.Schema({
-  bus: {
+  flight: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Bus",
+    ref: "Flight",
     required: true,
     unique: true,
   },
   layout: {
     type: String,
-    enum: ["2x2", "2x3", "1x2", "2x1"],
+    enum: ["1x1", "2x2", "3x3", "2x3", "2x4x2", "3x3x3", "3x4x3"],
     required: [true, "Please specify seat layout"],
-    default: "2x2",
+    default: "3x3",
   },
   totalSeats: {
     type: Number,
@@ -33,18 +33,18 @@ const seatLayoutSchema = new mongoose.Schema({
       },
       type: {
         type: String,
-        enum: ["seater", "sleeper"],
-        default: "seater",
+        enum: ["economy", "premium-economy", "business", "first"],
+        default: "economy",
       },
       position: {
         type: String,
-        enum: ["window", "aisle", "middle"],
+        enum: ["window", "aisle", "middle", "center"],
         default: "middle",
       },
       deck: {
         type: String,
-        enum: ["lower", "upper"],
-        default: "lower",
+        enum: ["main", "upper"],
+        default: "main",
       },
     },
   ],

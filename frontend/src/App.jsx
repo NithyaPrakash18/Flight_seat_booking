@@ -12,7 +12,7 @@ import AdminLogin from "./pages/auth/AdminLogin";
 
 // User Pages
 import Home from "./pages/Home";
-import SearchBuses from "./pages/SearchBuses";
+import SearchFlights from "./pages/SearchFlights";
 import SeatSelection from "./pages/SeatSelection";
 import Payment from "./pages/Payment";
 import MyBookings from "./pages/MyBookings";
@@ -20,7 +20,7 @@ import Profile from "./pages/Profile";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
-import ManageBuses from "./pages/admin/ManageBuses";
+import ManageFlights from "./pages/admin/ManageFlights";
 import ManageRoutes from "./pages/admin/ManageRoutes";
 import ManageSeatLayouts from "./pages/admin/ManageSeatLayouts";
 import ViewBookings from "./pages/admin/ViewBookings";
@@ -42,9 +42,9 @@ function App() {
               <Route path="/admin/login" element={<AdminLogin />} />
 
               {/* Protected User Routes */}
-              <Route path="/search" element={<SearchBuses />} />
+              <Route path="/search" element={<SearchFlights />} />
               <Route
-                path="/seat-selection/:busId/:routeId"
+                path="/seat-selection/:flightId/:routeId"
                 element={<SeatSelection />}
               />
               <Route
@@ -82,10 +82,10 @@ function App() {
                 }
               />
               <Route
-                path="/admin/buses"
+                path="/admin/flights"
                 element={
                   <AdminRoute>
-                    <ManageBuses />
+                    <ManageFlights />
                   </AdminRoute>
                 }
               />

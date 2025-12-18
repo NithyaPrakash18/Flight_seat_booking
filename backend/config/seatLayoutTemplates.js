@@ -1,20 +1,90 @@
 /**
- * Predefined Seat Layout Templates
- * These templates define fixed seat configurations for different bus types
+ * Predefined Seat Layout Templates for Flights
+ * These templates define fixed seat configurations for different flight classes
  */
 
 const SEAT_LAYOUT_TEMPLATES = {
-  Seater: {
+  Economy: {
+    totalSeats: 120,
+    layout: "3x3",
+    configuration: {
+      rows: 20,
+      seatsPerRow: 6,
+      aisleAfter: 3, // Aisle after 3rd seat (ABC DEF)
+    },
+    generateSeats: function () {
+      const seats = [];
+      const colMap = { 1: "A", 2: "B", 3: "C", 4: "D", 5: "E", 6: "F" };
+
+      for (let row = 1; row <= this.configuration.rows; row++) {
+        for (let col = 1; col <= this.configuration.seatsPerRow; col++) {
+          let position = "middle";
+
+          // Determine position (window/aisle)
+          if (col === 1 || col === 6) {
+            position = "window";
+          } else if (col === 3 || col === 4) {
+            position = "aisle";
+          }
+
+          seats.push({
+            seatNumber: `${row}${colMap[col]}`,
+            row: row,
+            column: col,
+            type: "economy",
+            position: position,
+            deck: "main",
+          });
+        }
+      }
+
+      return seats;
+    },
+  },
+  "Premium Economy": {
+    totalSeats: 60,
+    layout: "3x3",
+    configuration: {
+      rows: 10,
+      seatsPerRow: 6,
+      aisleAfter: 3,
+    },
+    generateSeats: function () {
+      const seats = [];
+      const colMap = { 1: "A", 2: "B", 3: "C", 4: "D", 5: "E", 6: "F" };
+
+      for (let row = 1; row <= this.configuration.rows; row++) {
+        for (let col = 1; col <= this.configuration.seatsPerRow; col++) {
+          let position = "middle";
+          if (col === 1 || col === 6) position = "window";
+          else if (col === 3 || col === 4) position = "aisle";
+
+          seats.push({
+            seatNumber: `${row}${colMap[col]}`,
+            row: row,
+            column: col,
+            type: "premium-economy",
+            position: position,
+            deck: "main",
+          });
+        }
+      }
+      return seats;
+    },
+
+  },
+
+  Business: {
     totalSeats: 40,
     layout: "2x2",
     configuration: {
       rows: 10,
       seatsPerRow: 4,
-      aisleAfter: 2, // Aisle after 2nd seat in each row
+      aisleAfter: 2, // Aisle after 2nd seat (AC DF)
     },
     generateSeats: function () {
       const seats = [];
-      let seatNumber = 1;
+      const colMap = { 1: "A", 2: "C", 3: "D", 4: "F" }; // Skip B and E for wider seats
 
       for (let row = 1; row <= this.configuration.rows; row++) {
         for (let col = 1; col <= this.configuration.seatsPerRow; col++) {
@@ -28,15 +98,13 @@ const SEAT_LAYOUT_TEMPLATES = {
           }
 
           seats.push({
-            seatNumber: seatNumber.toString(),
+            seatNumber: `${row}${colMap[col]}`,
             row: row,
             column: col,
-            type: "seater",
+            type: "business",
             position: position,
-            deck: "lower",
+            deck: "main",
           });
-
-          seatNumber++;
         }
       }
 
@@ -44,140 +112,48 @@ const SEAT_LAYOUT_TEMPLATES = {
     },
   },
 
-  "Semi-Sleeper": {
-    totalSeats: 35,
-    layout: "2x2+1x2", // Lower+Upper deck layouts
+  "First Class": {
+    totalSeats: 12,
+    layout: "1x1", // Or 1-1 suites
     configuration: {
-      lowerDeck: {
-        rows: 5,
-        seatsPerRow: 4, // 2-2 configuration
-        aisleAfter: 2,
-      },
-      upperDeck: {
-        rows: 5,
-        seatsPerRow: 3, // 1-2 configuration
-        aisleAfter: 1,
-      },
+      rows: 4,
+      seatsPerRow: 3, // 1-1-1 (A F K)
+      aisleAfter: 1,
     },
     generateSeats: function () {
+      // Custom generator for 1-1, let's say 1-2-1 logic or just simple 1-1-1
       const seats = [];
-      let seatNumber = 1;
-
-      // Generate lower deck seats (seater - seats 1-20)
-      for (let row = 1; row <= this.configuration.lowerDeck.rows; row++) {
-        for (
-          let col = 1;
-          col <= this.configuration.lowerDeck.seatsPerRow;
-          col++
-        ) {
-          let position = "middle";
-
-          if (col === 1 || col === 4) {
-            position = "window";
-          } else if (col === 2 || col === 3) {
-            position = "aisle";
-          }
-
-          seats.push({
-            seatNumber: seatNumber.toString(),
-            row: row,
-            column: col,
-            type: "seater",
-            position: position,
-            deck: "lower",
-          });
-
-          seatNumber++;
-        }
-      }
-
-      // Generate upper deck sleeper berths (seats 21-35)
-      for (let row = 1; row <= this.configuration.upperDeck.rows; row++) {
-        for (
-          let col = 1;
-          col <= this.configuration.upperDeck.seatsPerRow;
-          col++
-        ) {
-          let position = "middle";
-
-          if (col === 1) {
-            position = "window"; // Left single berth
-          } else if (col === 2 || col === 3) {
-            position = col === 2 ? "aisle" : "window";
-          }
-
-          seats.push({
-            seatNumber: seatNumber.toString(),
-            row: row,
-            column: col,
-            type: "sleeper",
-            position: position,
-            deck: "upper",
-          });
-
-          seatNumber++;
-        }
-      }
-
-      return seats;
-    },
-  },
-
-  Sleeper: {
-    totalSeats: 30,
-    layout: "1x2",
-    configuration: {
-      rows: 10,
-      seatsPerRow: 3,
-      aisleAfter: 1, // Aisle after 1st berth (left side)
-    },
-    generateSeats: function () {
-      const seats = [];
-      let seatNumber = 1;
+      const colMap = { 1: 'A', 2: 'F', 3: 'K' };
 
       for (let row = 1; row <= this.configuration.rows; row++) {
         for (let col = 1; col <= this.configuration.seatsPerRow; col++) {
-          let position = "middle";
-
-          // Determine position
-          if (col === 1) {
-            position = "window"; // Left single berth
-          } else if (col === 2 || col === 3) {
-            position = col === 2 ? "aisle" : "window"; // Right side berths
-          }
-
           seats.push({
-            seatNumber: seatNumber.toString(),
+            seatNumber: `${row}${colMap[col]}`,
             row: row,
             column: col,
-            type: "sleeper", // Changed to sleeper type
-            position: position,
-            deck: "lower",
+            type: "first",
+            position: col === 2 ? "center" : "window",
+            deck: "main"
           });
-
-          seatNumber++;
         }
       }
-
       return seats;
     },
   },
 };
 
 /**
- * Get seat layout template for a specific seat type
- * @param {string} seatType - Type of seat (Seater, Semi-Sleeper, Sleeper)
+ * Get seat layout template for a specific flight class
+ * @param {string} flightClass - Class of flight (Economy, Business, First Class)
  * @returns {object} Layout template with generated seats
  */
-function getSeatLayoutTemplate(seatType) {
-  const template = SEAT_LAYOUT_TEMPLATES[seatType];
+function getSeatLayoutTemplate(flightClass) {
+  const template = SEAT_LAYOUT_TEMPLATES[flightClass];
 
   if (!template) {
-    throw new Error(`Invalid seat type: ${seatType}`);
-  }
-
-  if (template.totalSeats === 0) {
-    throw new Error(`Seat layout for ${seatType} is not yet configured`);
+    // Fallback or error
+    if (flightClass === "Economy") return SEAT_LAYOUT_TEMPLATES["Economy"];
+    throw new Error(`Invalid flight class: ${flightClass}`);
   }
 
   return {
@@ -188,13 +164,11 @@ function getSeatLayoutTemplate(seatType) {
 }
 
 /**
- * Get available seat types
- * @returns {Array} Array of available seat type names
+ * Get available seat types (classes)
+ * @returns {Array} Array of available class names
  */
 function getAvailableSeatTypes() {
-  return Object.keys(SEAT_LAYOUT_TEMPLATES).filter(
-    (type) => SEAT_LAYOUT_TEMPLATES[type].totalSeats > 0
-  );
+  return Object.keys(SEAT_LAYOUT_TEMPLATES);
 }
 
 module.exports = {

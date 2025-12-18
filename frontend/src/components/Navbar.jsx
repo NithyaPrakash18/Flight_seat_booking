@@ -1,67 +1,57 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "../styles/Navbar.css";
 
 const Navbar = () => {
-  const { user, isAuthenticated, isAdmin, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
+  const location = useLocation();
+
+  const isActive = (path) => {
+    if (path === "/" && location.pathname === "/") return true;
+    if (path !== "/" && location.pathname.startsWith(path)) return true;
+    return false;
+  };
 
   return (
     <nav className="navbar">
       <div className="navbar-container">
+        {/* Brand */}
         <Link to="/" className="navbar-brand">
-          🚌 Travel Booking
+          <span className="brand-icon">✈️</span>
+          <span className="brand-name">SkyWays</span>
         </Link>
 
-        <div className="navbar-menu">
-          {isAuthenticated ? (
-            <>
-              {isAdmin ? (
-                <>
-                  <Link to="/admin/dashboard" className="nav-link">
-                    Dashboard
-                  </Link>
-                  <Link to="/admin/buses" className="nav-link">
-                    Buses
-                  </Link>
-                  <Link to="/admin/routes" className="nav-link">
-                    Routes
-                  </Link>
-                  <Link to="/admin/bookings" className="nav-link">
-                    Bookings
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link to="/" className="nav-link">
-                    Home
-                  </Link>
-                  <Link to="/my-bookings" className="nav-link">
-                    My Bookings
-                  </Link>
-                </>
-              )}
+        {/* Center Menu (Icons) */}
+        <div className="navbar-center-menu">
+          <Link to="/" className={`nav-item ${isActive("/") ? "active" : ""}`}>
+            <span className="nav-icon">✈️</span>
+            <span>FLIGHT</span>
+          </Link>
+        </div>
 
-              <div className="user-menu">
-                <Link to="/profile" className="user-name-link">
-                  👤 {user?.name}
-                </Link>
-                <button onClick={logout} className="btn btn-outline">
-                  Logout
-                </button>
-              </div>
-            </>
+        {/* Right Side (Support & User) */}
+        <div className="navbar-right">
+          <div className="support-info">
+            <span className="support-tag">LIVE ASSISTANCE</span>
+            <span className="support-number">📞 09999-331-771</span>
+          </div>
+
+          {isAuthenticated ? (
+            <div className="user-menu" style={{ position: 'relative' }}>
+              <Link to="/profile" className="user-profile-btn" title={user?.name}>
+                👤
+              </Link>
+              {/* Simplified logout for now */}
+              <button onClick={logout} style={{
+                position: 'absolute', top: '100%', right: 0,
+                background: 'white', border: '1px solid #eee',
+                padding: '5px 10px', display: 'none' // Hover via CSS usually, preserving simple react for speed
+              }}>Logout</button>
+            </div>
           ) : (
-            <>
-              <Link to="/" className="nav-link">
-                Home
-              </Link>
-              <Link to="/login" className="btn btn-primary">
-                Login
-              </Link>
-              <Link to="/register" className="btn btn-outline">
-                Register
-              </Link>
-            </>
+            <Link to="/login" className="btn btn-primary" style={{ padding: "8px 20px" }}>
+              Login / Sign Up
+            </Link>
           )}
         </div>
       </div>
